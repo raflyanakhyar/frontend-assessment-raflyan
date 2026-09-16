@@ -1,4 +1,5 @@
 import data from '../data.json'
+import ButtonAction from './ButtonAction'
 
 const formatPrice = (value) =>
     new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(value)
@@ -9,6 +10,16 @@ const formatDate = (value) =>
         month: 'short',
         day: 'numeric',
     })
+
+const handleView = () => {
+    console.log('view')
+}
+const handleEdit = () => {
+    console.log('edit')
+}
+const handleDelete = () => {
+    console.log('delete')
+}
 
 export default function ProductsTables() {
     return (
@@ -29,20 +40,14 @@ export default function ProductsTables() {
                         {data.products.map((product) => (
                             <tr className="border-b border-slate-100">
                                 <td className="px-6 py-4">{product.name}</td>
-                                <td className="px-6 py-4">{product.category}</td>
+                                <td className="px-6 py-4">(product.category)</td>
                                 <td className="px-6 py-4">{formatPrice(product.price)}</td>
-                                <td className="px-6 py-4">{product.status}</td>
+                                <td className="px-6 py-4">(product.status)</td>
                                 <td className="px-6 py-4">{formatDate(product.createdAt)}</td>
                                 <td className="flex px-6 py-4 gap-2">
-                                    <button class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded">
-                                        View
-                                    </button>
-                                    <button class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded">
-                                        Edit
-                                    </button>
-                                    <button class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded">
-                                        Delete
-                                    </button>
+                                    <ButtonAction label="View" onClick={handleView} />
+                                    <ButtonAction label="Edit" onClick={handleEdit} />
+                                    <ButtonAction label="Delete" onClick={handleDelete} />
                                 </td>
                             </tr>
                         ))}
