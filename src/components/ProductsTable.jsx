@@ -1,6 +1,7 @@
-import data from '../data.json'
 import ButtonAction from './ButtonAction'
 import Badge from './Badge'
+import Modal from './Modal'
+import { useState } from 'react'
 
 const formatPrice = (value) =>
     new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(value)
@@ -30,17 +31,38 @@ const formatStatus = (status) => {
     }
 }
 
-const handleView = () => {
-    console.log('view')
-}
-const handleEdit = () => {
-    console.log('edit')
-}
-const handleDelete = () => {
-    console.log('delete')
-}
+export default function ProductsTables(products) {
+    const [productList, setProductList] = useState(products.products)
+    const [isModalOpen, setIsModalOpen] = useState(false)
+    const [selectedProduct, setSelectedProduct] = useState(null)
+    const [modalMode, setModalMode] = useState('view')
 
-export default function ProductsTables() {
+    const openModal = (product, mode) => {
+        setSelectedProduct(product)
+        setModalMode(mode)
+        setIsModalOpen(true)
+    }
+
+    const handleSave = (updatedProduct) => {
+        setProductList((currentProducts) =>
+            currentProducts.map((product) =>
+                product.id === updatedProduct.id ? updatedProduct : product,
+            ),
+        )
+        handleCloseModal()
+    }
+
+    const handleDelete = (product) => {
+        setProductList((currentProducts) =>
+            currentProducts.filter((currentProduct) => currentProduct.id !== product.id),
+        )
+        handleCloseModal()
+    }
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false)
+        setSelectedProduct(null)
+    }
     return (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
             <div className="overflow-x-auto">
@@ -52,27 +74,45 @@ export default function ProductsTables() {
                             <th className="px-6 py-4 text-xs">Price</th>
                             <th className="px-6 py-4 text-xs">Status</th>
                             <th className="px-6 py-4 text-xs">Created</th>
-                            <th className="px-6 py-4 text-xs">Action</th>
+                            <th className="px-6 py-4 text-xs text-center">Action</th>
                         </tr>
                     </thead>
                     <tbody className="text-sm">
-                        {data.products.map((product) => (
-                            <tr className="border-b border-slate-100">
+                        {productList.map((product) => (
+                            <tr key={product.id} className="border-b border-slate-100">
                                 <td className="px-6 py-4">{product.name}</td>
                                 <td className="px-6 py-4">{formatCategory(product.category)}</td>
                                 <td className="px-6 py-4">{formatPrice(product.price)}</td>
                                 <td className="px-6 py-4">{formatStatus(product.status)}</td>
                                 <td className="px-6 py-4">{formatDate(product.createdAt)}</td>
                                 <td className="flex px-6 py-4 gap-2">
-                                    <ButtonAction label="View" onClick={handleView} />
-                                    <ButtonAction label="Edit" onClick={handleEdit} />
-                                    <ButtonAction label="Delete" onClick={handleDelete} />
+                                    <ButtonAction
+                                        label="View"
+                                        onClick={() => openModal(product, 'view')}
+                                    />
+                                    <ButtonAction
+                                        label="Edit"
+                                        onClick={() => openModal(product, 'edit')}
+                                    />
+                                    <ButtonAction
+                                        label="Delete"
+                                        onClick={() => openModal(product, 'delete')}
+                                    />
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
+            {isModalOpen && selectedProduct && (
+                <Modal
+                    product={selectedProduct}
+                    mode={modalMode}
+                    onClose={handleCloseModal}
+                    onSave={handleSave}
+                    onDelete={handleDelete}
+                />
+            )}
         </div>
     )
 }
