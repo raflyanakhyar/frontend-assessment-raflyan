@@ -64,7 +64,7 @@ export default function ProductsTables(products) {
         setSelectedProduct(null)
     }
     return (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
                 <table className="w-full">
                     <thead>
