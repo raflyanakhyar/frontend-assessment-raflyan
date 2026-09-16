@@ -1,18 +1,70 @@
 import { useState } from 'react'
 
-export default function Modal({ product, mode, onClose, onSave, onDelete }) {
-    const [formData, setFormData] = useState(product)
+const CATEGORIES = ['Electronics', 'Home & Kitchen', 'Apparel']
+const STATUSES = ['In Stock', 'Out of Stock']
 
+const validateProduct = (product) => {
+    const errors = {}
+    const trimmedName = product.name.trim()
+    const numericPrice = Number(product.price)
+
+    if (!trimmedName) errors.name = 'Name is required.'
+    if (!CATEGORIES.includes(product.category)) errors.category = 'Category is required.'
+    if (!product.price || !Number.isFinite(numericPrice) || numericPrice <= 0) {
+        errors.price = 'Price must be greater than 0.'
+    }
+    if (!STATUSES.includes(product.status)) errors.status = 'Status is required.'
+
+    return { errors, trimmedName, numericPrice }
+}
+
+export default function Modal({ product, mode, onClose, onSave, onDelete, onAdd }) {
     const isEditMode = mode === 'edit'
+    const isAddMode = mode === 'add'
     const isDeleteMode = mode === 'delete'
+    const isFormMode = isEditMode || isAddMode
+
+    const [formData, setFormData] = useState(product)
+    const [errors, setErrors] = useState({})
+    const [touchedFields, setTouchedFields] = useState({})
+    const [isSubmitting, setIsSubmitting] = useState(false)
+
+    const isFormInvalid = Object.keys(validateProduct(formData).errors).length > 0
 
     const handleChange = (field, value) => {
-        setFormData((currentData) => ({ ...currentData, [field]: value }))
+        const nextFormData = { ...formData, [field]: value }
+        const fieldError = validateProduct(nextFormData).errors[field] || ''
+
+        setFormData(nextFormData)
+        setTouchedFields((currentFields) => ({ ...currentFields, [field]: true }))
+        setErrors((currentErrors) => ({ ...currentErrors, [field]: fieldError }))
+    }
+
+    const handleBlur = (field) => {
+        const fieldError = validateProduct(formData).errors[field] || ''
+
+        setTouchedFields((currentFields) => ({ ...currentFields, [field]: true }))
+        setErrors((currentErrors) => ({ ...currentErrors, [field]: fieldError }))
     }
 
     const handleSubmit = (event) => {
         event.preventDefault()
-        onSave({ ...formData, price: Number(formData.price) })
+
+        const { errors: nextErrors, trimmedName, numericPrice } = validateProduct(formData)
+        setTouchedFields({ name: true, category: true, price: true, status: true })
+        setErrors(nextErrors)
+
+        setIsSubmitting(true)
+        const normalizedProduct = { ...formData, name: trimmedName, price: numericPrice }
+        if (isAddMode) {
+            onAdd({
+                ...normalizedProduct,
+                id: Math.random(),
+                createdAt: new Date(),
+            })
+        } else {
+            onSave(normalizedProduct)
+        }
     }
 
     return (
@@ -20,18 +72,16 @@ export default function Modal({ product, mode, onClose, onSave, onDelete }) {
             <div className="fixed inset-0 z-10 flex items-center justify-center bg-slate-900/50 p-4">
                 <div className="w-full max-w-xs rounded-2xl bg-white p-6 shadow-xl">
                     <div className="mb-5 flex items-center justify-between">
-                        <h2 className="text-lg font-semibold">
-                            {isEditMode
-                                ? 'Edit Product'
-                                : isDeleteMode
-                                  ? 'Delete Product'
-                                  : 'Product Details'}
+                        <h2 className="text-xl font-semibold">
+                            {isAddMode
+                                ? 'Add Product'
+                                : isEditMode
+                                  ? 'Edit Product'
+                                  : isDeleteMode
+                                    ? 'Delete Product'
+                                    : 'Product Details'}
                         </h2>
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="text-slate-500 hover:text-slate-900"
-                        >
+                        <button type="button" onClick={onClose} className="hover:scale-105">
                             Close
                         </button>
                     </div>
@@ -65,9 +115,14 @@ export default function Modal({ product, mode, onClose, onSave, onDelete }) {
                                     type="text"
                                     value={formData.name}
                                     onChange={(event) => handleChange('name', event.target.value)}
-                                    readOnly={!isEditMode}
+                                    onBlur={() => handleBlur('name')}
+                                    readOnly={!isFormMode}
+                                    required={isFormMode}
                                     className="w-full px-3.5 py-2 border rounded-lg text-sm focus:outline-none transition"
                                 />
+                                {touchedFields.name && errors.name && (
+                                    <p className="mt-1 text-xs text-red-600">{errors.name}</p>
+                                )}
                             </div>
                             <div className="mb-3">
                                 <label className="block text-xs font-semibold mb-1">Category</label>
@@ -76,13 +131,21 @@ export default function Modal({ product, mode, onClose, onSave, onDelete }) {
                                     onChange={(event) =>
                                         handleChange('category', event.target.value)
                                     }
-                                    disabled={!isEditMode}
+                                    onBlur={() => handleBlur('category')}
+                                    disabled={!isFormMode}
+                                    required={isFormMode}
                                     className="w-full px-3.5 py-2 border rounded-lg text-sm bg-white"
                                 >
-                                    <option value="Electronics">Electronics</option>
-                                    <option value="Home & Kitchen">Home & Kitchen</option>
-                                    <option value="Apparel">Apparel</option>
+                                    <option value="">Select category</option>
+                                    {CATEGORIES.map((category) => (
+                                        <option key={category} value={category}>
+                                            {category}
+                                        </option>
+                                    ))}
                                 </select>
+                                {touchedFields.category && errors.category && (
+                                    <p className="mt-1 text-xs text-red-600">{errors.category}</p>
+                                )}
                             </div>
                             <div className="mb-3">
                                 <label className="block text-xs font-semibold mb-1">Price</label>
@@ -91,28 +154,42 @@ export default function Modal({ product, mode, onClose, onSave, onDelete }) {
                                     step="1"
                                     value={formData.price}
                                     onChange={(event) => handleChange('price', event.target.value)}
-                                    readOnly={!isEditMode}
+                                    onBlur={() => handleBlur('price')}
+                                    readOnly={!isFormMode}
+                                    required={isFormMode}
                                     className="w-full px-3.5 py-2 border rounded-lg text-sm"
                                 />
+                                {touchedFields.price && errors.price && (
+                                    <p className="mt-1 text-xs text-red-600">{errors.price}</p>
+                                )}
                             </div>
                             <div className="mb-5">
                                 <label className="block text-xs font-semibold mb-1">Status</label>
                                 <select
                                     value={formData.status}
                                     onChange={(event) => handleChange('status', event.target.value)}
-                                    disabled={!isEditMode}
+                                    onBlur={() => handleBlur('status')}
+                                    disabled={!isFormMode}
+                                    required={isFormMode}
                                     className="w-full px-3.5 py-2 border rounded-lg text-sm bg-white"
                                 >
-                                    <option value="In Stock">In Stock</option>
-                                    <option value="Out of Stock">Out of Stock</option>
+                                    {STATUSES.map((status) => (
+                                        <option key={status} value={status}>
+                                            {status}
+                                        </option>
+                                    ))}
                                 </select>
+                                {touchedFields.status && errors.status && (
+                                    <p className="mt-1 text-xs text-red-600">{errors.status}</p>
+                                )}
                             </div>
-                            {isEditMode && (
+                            {isFormMode && (
                                 <button
                                     type="submit"
-                                    className="w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                                    disabled={isFormInvalid || isSubmitting}
+                                    className="w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
-                                    Save Changes
+                                    {isAddMode ? 'Add Product' : 'Save Changes'}
                                 </button>
                             )}
                         </form>

@@ -43,6 +43,11 @@ export default function ProductsTables(products) {
         setIsModalOpen(true)
     }
 
+    const handleAdd = (newProduct) => {
+        setProductList((currentProducts) => [...currentProducts, newProduct])
+        handleCloseModal()
+    }
+
     const handleSave = (updatedProduct) => {
         setProductList((currentProducts) =>
             currentProducts.map((product) =>
@@ -65,6 +70,14 @@ export default function ProductsTables(products) {
     }
     return (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="flex justify-start border-b border-slate-200 p-4">
+                <ButtonAction
+                    label="Add Product"
+                    onClick={() =>
+                        openModal({ name: '', category: '', price: '', status: 'In Stock' }, 'add')
+                    }
+                />
+            </div>
             <div className="overflow-x-auto">
                 <table className="w-full">
                     <thead>
@@ -111,6 +124,7 @@ export default function ProductsTables(products) {
                     onClose={handleCloseModal}
                     onSave={handleSave}
                     onDelete={handleDelete}
+                    onAdd={handleAdd}
                 />
             )}
         </div>
