@@ -14,11 +14,11 @@ const formatDate = (value) =>
 
 const formatCategory = (category) => {
     if (category === 'Electronics') {
-        return <Badge title={category} color="red" />
+        return <Badge title={category} color="orange" />
     } else if (category === 'Home & Kitchen') {
         return <Badge title={category} color="blue" />
     } else if (category === 'Apparel') {
-        return <Badge title={category} color="green" />
+        return <Badge title={category} color="violet" />
     }
 }
 
