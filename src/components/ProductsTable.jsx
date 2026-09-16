@@ -1,5 +1,6 @@
 import data from '../data.json'
 import ButtonAction from './ButtonAction'
+import Badge from './Badge'
 
 const formatPrice = (value) =>
     new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(value)
@@ -10,6 +11,24 @@ const formatDate = (value) =>
         month: 'short',
         day: 'numeric',
     })
+
+const formatCategory = (category) => {
+    if (category === 'Electronics') {
+        return <Badge title={category} color="red" />
+    } else if (category === 'Home & Kitchen') {
+        return <Badge title={category} color="blue" />
+    } else if (category === 'Apparel') {
+        return <Badge title={category} color="green" />
+    }
+}
+
+const formatStatus = (status) => {
+    if (status === 'In Stock') {
+        return <Badge title={status} color="green" />
+    } else if (status === 'Out of Stock') {
+        return <Badge title={status} color="red" />
+    }
+}
 
 const handleView = () => {
     console.log('view')
@@ -40,9 +59,9 @@ export default function ProductsTables() {
                         {data.products.map((product) => (
                             <tr className="border-b border-slate-100">
                                 <td className="px-6 py-4">{product.name}</td>
-                                <td className="px-6 py-4">(product.category)</td>
+                                <td className="px-6 py-4">{formatCategory(product.category)}</td>
                                 <td className="px-6 py-4">{formatPrice(product.price)}</td>
-                                <td className="px-6 py-4">(product.status)</td>
+                                <td className="px-6 py-4">{formatStatus(product.status)}</td>
                                 <td className="px-6 py-4">{formatDate(product.createdAt)}</td>
                                 <td className="flex px-6 py-4 gap-2">
                                     <ButtonAction label="View" onClick={handleView} />
