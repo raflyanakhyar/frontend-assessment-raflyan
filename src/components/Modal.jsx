@@ -18,7 +18,15 @@ const validateProduct = (product) => {
     return { errors, trimmedName, numericPrice }
 }
 
-export default function Modal({ product, mode, onClose, onSave, onDelete, onAdd }) {
+export default function Modal({
+    product,
+    mode,
+    onClose,
+    onSave,
+    onDelete,
+    onAdd,
+    onError = () => {},
+}) {
     const isEditMode = mode === 'edit'
     const isAddMode = mode === 'add'
     const isDeleteMode = mode === 'delete'
@@ -47,23 +55,32 @@ export default function Modal({ product, mode, onClose, onSave, onDelete, onAdd 
         setErrors((currentErrors) => ({ ...currentErrors, [field]: fieldError }))
     }
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault()
 
         const { errors: nextErrors, trimmedName, numericPrice } = validateProduct(formData)
         setTouchedFields({ name: true, category: true, price: true, status: true })
         setErrors(nextErrors)
 
+        if (Object.keys(nextErrors).length > 0) return
+
         setIsSubmitting(true)
         const normalizedProduct = { ...formData, name: trimmedName, price: numericPrice }
-        if (isAddMode) {
-            onAdd({
-                ...normalizedProduct,
-                id: Math.random(),
-                createdAt: new Date(),
-            })
-        } else {
-            onSave(normalizedProduct)
+
+        try {
+            if (isAddMode) {
+                await onAdd({
+                    ...normalizedProduct,
+                    createdAt: new Date().toISOString(),
+                })
+            } else {
+                await onSave(normalizedProduct)
+            }
+        } catch (submitError) {
+            const message = submitError.message || 'Failed to save product.'
+            setErrors({ form: message })
+            onError(message)
+            setIsSubmitting(false)
         }
     }
 
@@ -90,6 +107,9 @@ export default function Modal({ product, mode, onClose, onSave, onDelete, onAdd 
                             <p className="mb-6 text-sm text-slate-600">
                                 Are you sure you want to delete {product.name}?
                             </p>
+                            {errors.form && (
+                                <p className="mb-3 text-xs text-red-600">{errors.form}</p>
+                            )}
                             <div className="flex justify-end gap-2">
                                 <button
                                     type="button"
@@ -100,8 +120,22 @@ export default function Modal({ product, mode, onClose, onSave, onDelete, onAdd 
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => onDelete(product)}
-                                    className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+                                    onClick={async () => {
+                                        setIsSubmitting(true)
+                                        try {
+                                            await onDelete(product)
+                                        } catch (submitError) {
+                                            const message =
+                                                submitError.message || 'Failed to delete product.'
+                                            setErrors({
+                                                form: message,
+                                            })
+                                            onError(message)
+                                            setIsSubmitting(false)
+                                        }
+                                    }}
+                                    disabled={isSubmitting}
+                                    className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     Delete
                                 </button>
@@ -118,7 +152,7 @@ export default function Modal({ product, mode, onClose, onSave, onDelete, onAdd 
                                     onBlur={() => handleBlur('name')}
                                     readOnly={!isFormMode}
                                     required={isFormMode}
-                                    className="w-full px-3.5 py-2 border rounded-lg text-sm focus:outline-none transition"
+                                    className={`w-full px-3.5 py-2 border rounded-lg text-sm focus:outline-none transition ${!isFormMode ? 'cursor-not-allowed bg-slate-50' : ''}`}
                                 />
                                 {touchedFields.name && errors.name && (
                                     <p className="mt-1 text-xs text-red-600">{errors.name}</p>
@@ -134,7 +168,7 @@ export default function Modal({ product, mode, onClose, onSave, onDelete, onAdd 
                                     onBlur={() => handleBlur('category')}
                                     disabled={!isFormMode}
                                     required={isFormMode}
-                                    className="w-full px-3.5 py-2 border rounded-lg text-sm bg-white"
+                                    className={`w-full px-3.5 py-2 border rounded-lg text-sm ${!isFormMode ? 'cursor-not-allowed bg-slate-50' : ''}`}
                                 >
                                     <option value="">Select category</option>
                                     {CATEGORIES.map((category) => (
@@ -157,7 +191,7 @@ export default function Modal({ product, mode, onClose, onSave, onDelete, onAdd 
                                     onBlur={() => handleBlur('price')}
                                     readOnly={!isFormMode}
                                     required={isFormMode}
-                                    className="w-full px-3.5 py-2 border rounded-lg text-sm"
+                                    className={`w-full px-3.5 py-2 border rounded-lg text-sm focus:outline-none transition ${!isFormMode ? 'cursor-not-allowed bg-slate-50' : ''}`}
                                 />
                                 {touchedFields.price && errors.price && (
                                     <p className="mt-1 text-xs text-red-600">{errors.price}</p>
@@ -171,7 +205,7 @@ export default function Modal({ product, mode, onClose, onSave, onDelete, onAdd 
                                     onBlur={() => handleBlur('status')}
                                     disabled={!isFormMode}
                                     required={isFormMode}
-                                    className="w-full px-3.5 py-2 border rounded-lg text-sm bg-white"
+                                    className={`w-full px-3.5 py-2 border rounded-lg text-sm ${!isFormMode ? 'cursor-not-allowed bg-slate-50' : ''}`}
                                 >
                                     {STATUSES.map((status) => (
                                         <option key={status} value={status}>
@@ -184,13 +218,22 @@ export default function Modal({ product, mode, onClose, onSave, onDelete, onAdd 
                                 )}
                             </div>
                             {isFormMode && (
-                                <button
-                                    type="submit"
-                                    disabled={isFormInvalid || isSubmitting}
-                                    className="w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                    {isAddMode ? 'Add Product' : 'Save Changes'}
-                                </button>
+                                <>
+                                    {errors.form && (
+                                        <p className="mb-2 text-xs text-red-600">{errors.form}</p>
+                                    )}
+                                    <button
+                                        type="submit"
+                                        disabled={isFormInvalid || isSubmitting}
+                                        className="w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        {isSubmitting
+                                            ? 'Saving...'
+                                            : isAddMode
+                                              ? 'Add Product'
+                                              : 'Save Changes'}
+                                    </button>
+                                </>
                             )}
                         </form>
                     )}

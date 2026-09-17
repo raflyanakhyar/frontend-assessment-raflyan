@@ -3,6 +3,9 @@ import Badge from './Badge'
 import Modal from './Modal'
 import { useState } from 'react'
 
+const CATEGORIES = ['Electronics', 'Home & Kitchen', 'Apparel']
+const STATUSES = ['In Stock', 'Out of Stock']
+
 const formatPrice = (value) =>
     new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(value)
 
@@ -31,8 +34,16 @@ const formatStatus = (status) => {
     }
 }
 
-export default function ProductsTables(products) {
-    const [productList, setProductList] = useState(products.products)
+export default function ProductsTables({
+    products,
+    onCreateProduct,
+    onUpdateProduct,
+    onDeleteProduct,
+}) {
+    const [productList, setProductList] = useState(products)
+    const [searchTerm, setSearchTerm] = useState('')
+    const [categoryFilter, setCategoryFilter] = useState('')
+    const [statusFilter, setStatusFilter] = useState('')
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [selectedProduct, setSelectedProduct] = useState(null)
     const [modalMode, setModalMode] = useState('view')
@@ -43,21 +54,29 @@ export default function ProductsTables(products) {
         setIsModalOpen(true)
     }
 
-    const handleAdd = (newProduct) => {
-        setProductList((currentProducts) => [...currentProducts, newProduct])
+    const handleAdd = async (newProduct) => {
+        const createdProduct = onCreateProduct ? await onCreateProduct(newProduct) : newProduct
+
+        setProductList((currentProducts) => [...currentProducts, createdProduct])
         handleCloseModal()
     }
 
-    const handleSave = (updatedProduct) => {
+    const handleSave = async (updatedProduct) => {
+        const savedProduct = onUpdateProduct
+            ? await onUpdateProduct(updatedProduct)
+            : updatedProduct
+
         setProductList((currentProducts) =>
             currentProducts.map((product) =>
-                product.id === updatedProduct.id ? updatedProduct : product,
+                product.id === savedProduct.id ? savedProduct : product,
             ),
         )
         handleCloseModal()
     }
 
-    const handleDelete = (product) => {
+    const handleDelete = async (product) => {
+        if (onDeleteProduct) await onDeleteProduct(product)
+
         setProductList((currentProducts) =>
             currentProducts.filter((currentProduct) => currentProduct.id !== product.id),
         )
@@ -68,6 +87,15 @@ export default function ProductsTables(products) {
         setIsModalOpen(false)
         setSelectedProduct(null)
     }
+
+    const filteredProducts = productList.filter((product) => {
+        const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase())
+        const matchesCategory = !categoryFilter || product.category === categoryFilter
+        const matchesStatus = !statusFilter || product.status === statusFilter
+
+        return matchesSearch && matchesCategory && matchesStatus
+    })
+
     return (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="flex justify-start border-b border-slate-200 p-4">
@@ -77,6 +105,39 @@ export default function ProductsTables(products) {
                         openModal({ name: '', category: '', price: '', status: 'In Stock' }, 'add')
                     }
                 />
+            </div>
+            <div className="grid gap-3 border-b border-slate-200 p-4 sm:grid-cols-3">
+                <input
+                    type="search"
+                    value={searchTerm}
+                    onChange={(event) => setSearchTerm(event.target.value)}
+                    placeholder="Search product..."
+                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                />
+                <select
+                    value={categoryFilter}
+                    onChange={(event) => setCategoryFilter(event.target.value)}
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                >
+                    <option value="">All categories</option>
+                    {CATEGORIES.map((category) => (
+                        <option key={category} value={category}>
+                            {category}
+                        </option>
+                    ))}
+                </select>
+                <select
+                    value={statusFilter}
+                    onChange={(event) => setStatusFilter(event.target.value)}
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                >
+                    <option value="">All statuses</option>
+                    {STATUSES.map((status) => (
+                        <option key={status} value={status}>
+                            {status}
+                        </option>
+                    ))}
+                </select>
             </div>
             <div className="overflow-x-auto">
                 <table className="w-full">
@@ -91,29 +152,39 @@ export default function ProductsTables(products) {
                         </tr>
                     </thead>
                     <tbody className="text-sm">
-                        {productList.map((product) => (
-                            <tr key={product.id} className="border-b border-slate-100">
-                                <td className="px-6 py-4">{product.name}</td>
-                                <td className="px-6 py-4">{formatCategory(product.category)}</td>
-                                <td className="px-6 py-4">{formatPrice(product.price)}</td>
-                                <td className="px-6 py-4">{formatStatus(product.status)}</td>
-                                <td className="px-6 py-4">{formatDate(product.createdAt)}</td>
-                                <td className="flex px-6 py-4 gap-2">
-                                    <ButtonAction
-                                        label="View"
-                                        onClick={() => openModal(product, 'view')}
-                                    />
-                                    <ButtonAction
-                                        label="Edit"
-                                        onClick={() => openModal(product, 'edit')}
-                                    />
-                                    <ButtonAction
-                                        label="Delete"
-                                        onClick={() => openModal(product, 'delete')}
-                                    />
+                        {filteredProducts.length === 0 ? (
+                            <tr>
+                                <td colSpan="6" className="px-6 py-8 text-center text-slate-500">
+                                    Product Not Found
                                 </td>
                             </tr>
-                        ))}
+                        ) : (
+                            filteredProducts.map((product) => (
+                                <tr key={product.id} className="border-b border-slate-100">
+                                    <td className="px-6 py-4">{product.name}</td>
+                                    <td className="px-6 py-4">
+                                        {formatCategory(product.category)}
+                                    </td>
+                                    <td className="px-6 py-4">{formatPrice(product.price)}</td>
+                                    <td className="px-6 py-4">{formatStatus(product.status)}</td>
+                                    <td className="px-6 py-4">{formatDate(product.createdAt)}</td>
+                                    <td className="flex px-6 py-4 gap-2">
+                                        <ButtonAction
+                                            label="View"
+                                            onClick={() => openModal(product, 'view')}
+                                        />
+                                        <ButtonAction
+                                            label="Edit"
+                                            onClick={() => openModal(product, 'edit')}
+                                        />
+                                        <ButtonAction
+                                            label="Delete"
+                                            onClick={() => openModal(product, 'delete')}
+                                        />
+                                    </td>
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>
