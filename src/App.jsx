@@ -1,9 +1,18 @@
 import ProductsTables from './components/ProductsTable'
+import Toast from './components/Toast'
 import useProducts from './hooks/useProducts'
+import { useCallback, useState } from 'react'
 
 function App() {
+    const [toast, setToast] = useState(null)
     const { products, isLoading, error, createProduct, updateProduct, deleteProduct } =
         useProducts()
+
+    const showToast = useCallback((type, message) => {
+        setToast({ type, message })
+    }, [])
+
+    const closeToast = useCallback(() => setToast(null), [])
 
     return (
         <>
@@ -16,9 +25,11 @@ function App() {
                         onCreateProduct={createProduct}
                         onUpdateProduct={updateProduct}
                         onDeleteProduct={deleteProduct}
+                        onNotify={showToast}
                     />
                 )}
             </main>
+            <Toast toast={toast} onClose={closeToast} />
         </>
     )
 }

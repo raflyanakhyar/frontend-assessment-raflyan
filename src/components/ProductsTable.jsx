@@ -39,6 +39,7 @@ export default function ProductsTables({
     onCreateProduct,
     onUpdateProduct,
     onDeleteProduct,
+    onNotify,
 }) {
     const [productList, setProductList] = useState(products)
     const [searchTerm, setSearchTerm] = useState('')
@@ -59,6 +60,7 @@ export default function ProductsTables({
 
         setProductList((currentProducts) => [...currentProducts, createdProduct])
         handleCloseModal()
+        onNotify('success', 'Product added successfully.')
     }
 
     const handleSave = async (updatedProduct) => {
@@ -72,6 +74,7 @@ export default function ProductsTables({
             ),
         )
         handleCloseModal()
+        onNotify('success', 'Product updated successfully.')
     }
 
     const handleDelete = async (product) => {
@@ -81,6 +84,7 @@ export default function ProductsTables({
             currentProducts.filter((currentProduct) => currentProduct.id !== product.id),
         )
         handleCloseModal()
+        onNotify('success', 'Product deleted successfully.')
     }
 
     const handleCloseModal = () => {
@@ -196,6 +200,7 @@ export default function ProductsTables({
                     onSave={handleSave}
                     onDelete={handleDelete}
                     onAdd={handleAdd}
+                    onError={(message) => onNotify('error', message)}
                 />
             )}
         </div>
