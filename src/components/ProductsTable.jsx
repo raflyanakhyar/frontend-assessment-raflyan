@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import ButtonAction from './ButtonAction'
 import Badge from './Badge'
 import Modal from './Modal'
@@ -14,6 +14,8 @@ const formatDate = (value) =>
         month: 'short',
         day: 'numeric',
     })
+
+const EMPTY_PRODUCT = { name: '', category: '', price: '', status: 'In Stock' }
 
 const formatCategory = (category) => {
     if (category === 'Electronics') {
@@ -40,10 +42,6 @@ export default function ProductsTables({
     onDeleteProduct,
     onNotify,
 }) {
-    const [productList, setProductList] = useState(products)
-    const [searchTerm, setSearchTerm] = useState('')
-    const [categoryFilter, setCategoryFilter] = useState('')
-    const [statusFilter, setStatusFilter] = useState('')
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [selectedProduct, setSelectedProduct] = useState(null)
     const [modalMode, setModalMode] = useState('view')
@@ -91,13 +89,23 @@ export default function ProductsTables({
         setSelectedProduct(null)
     }
 
-    const filteredProducts = productList.filter((product) => {
-        const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase())
-        const matchesCategory = !categoryFilter || product.category === categoryFilter
-        const matchesStatus = !statusFilter || product.status === statusFilter
+    const [filters, setFilters] = useState({ search: '', category: '', status: '' })
 
-        return matchesSearch && matchesCategory && matchesStatus
-    })
+    const filteredProducts = useMemo(() => {
+        const search = filters.search.trim().toLowerCase()
+
+        return products.filter((product) => {
+            const matchesSearch = product.name.toLowerCase().includes(search)
+            const matchesCategory = !filters.category || product.category === filters.category
+            const matchesStatus = !filters.status || product.status === filters.status
+
+            return matchesSearch && matchesCategory && matchesStatus
+        })
+    }, [products, filters])
+
+    const updateFilter = (field, value) => {
+        setFilters((current) => ({ ...current, [field]: value }))
+    }
 
     return (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -105,51 +113,10 @@ export default function ProductsTables({
                 <ButtonAction
                     label="Add Product"
                     icon={<LuPlus aria-hidden="true" />}
-                    onClick={() =>
-                        openModal({ name: '', category: '', price: '', status: 'In Stock' }, 'add')
-                    }
+                    onClick={() => openModal(EMPTY_PRODUCT, 'add')}
                 />
             </div>
-            <div className="grid gap-3 border-b border-slate-200 p-3 sm:grid-cols-3 sm:p-4">
-                <div className="relative">
-                    <LuSearch
-                        aria-hidden="true"
-                        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2"
-                    />
-                    <input
-                        type="search"
-                        value={searchTerm}
-                        onChange={(event) => setSearchTerm(event.target.value)}
-                        placeholder="Search product..."
-                        aria-label="Search products"
-                        className="w-full rounded-lg border border-slate-300 py-2 pl-10 pr-3 text-sm"
-                    />
-                </div>
-                <select
-                    value={categoryFilter}
-                    onChange={(event) => setCategoryFilter(event.target.value)}
-                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                >
-                    <option value="">All categories</option>
-                    {CATEGORIES.map((category) => (
-                        <option key={category} value={category}>
-                            {category}
-                        </option>
-                    ))}
-                </select>
-                <select
-                    value={statusFilter}
-                    onChange={(event) => setStatusFilter(event.target.value)}
-                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                >
-                    <option value="">All statuses</option>
-                    {STATUSES.map((status) => (
-                        <option key={status} value={status}>
-                            {status}
-                        </option>
-                    ))}
-                </select>
-            </div>
+            <ProductFilters filters={filters} onChange={updateFilter} />
             <div className="overflow-x-auto">
                 <table className="w-full min-w-212.5">
                     <thead>
@@ -216,5 +183,58 @@ export default function ProductsTables({
                 />
             )}
         </div>
+    )
+}
+
+function ProductFilters({ filters, onChange }) {
+    return (
+        <div className="grid gap-3 border-b border-slate-200 p-3 sm:grid-cols-3 sm:p-4">
+            <div className="relative">
+                <LuSearch
+                    aria-hidden="true"
+                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2"
+                />
+                <input
+                    type="search"
+                    value={filters.search}
+                    onChange={(event) => onChange('search', event.target.value)}
+                    placeholder="Search product..."
+                    aria-label="Search products"
+                    className="w-full rounded-lg border border-slate-300 py-2 pl-10 pr-3 text-sm"
+                />
+            </div>
+            <FilterSelect
+                value={filters.category}
+                onChange={(value) => onChange('category', value)}
+                label="Filter by category"
+                emptyLabel="All categories"
+                options={CATEGORIES}
+            />
+            <FilterSelect
+                value={filters.status}
+                onChange={(value) => onChange('status', value)}
+                label="Filter by status"
+                emptyLabel="All statuses"
+                options={STATUSES}
+            />
+        </div>
+    )
+}
+
+function FilterSelect({ value, onChange, label, emptyLabel, options }) {
+    return (
+        <select
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            aria-label={label}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+        >
+            <option value="">{emptyLabel}</option>
+            {options.map((option) => (
+                <option key={option} value={option}>
+                    {option}
+                </option>
+            ))}
+        </select>
     )
 }
