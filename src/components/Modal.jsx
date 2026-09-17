@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { CATEGORIES, STATUSES } from '../utils/constant'
+import { LuX } from 'react-icons/lu'
 
 const validateProduct = (product) => {
     const errors = {}
@@ -84,8 +85,8 @@ export default function Modal({
 
     return (
         <>
-            <div className="fixed inset-0 z-10 flex items-center justify-center bg-slate-900/50 p-4">
-                <div className="w-full max-w-xs rounded-2xl bg-white p-6 shadow-xl">
+            <div className="fixed inset-0 z-10 flex items-center justify-center overflow-y-auto bg-slate-900/50 p-3 sm:p-4">
+                <div className="my-auto max-h-[calc(100vh-1.5rem)] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-4 shadow-xl sm:max-h-none sm:p-6">
                     <div className="mb-5 flex items-center justify-between">
                         <h2 className="text-xl font-semibold">
                             {isAddMode
@@ -96,9 +97,7 @@ export default function Modal({
                                     ? 'Delete Product'
                                     : 'Product Details'}
                         </h2>
-                        <button type="button" onClick={onClose} className="hover:scale-105">
-                            Close
-                        </button>
+                        <LuX type="button" onClick={onClose} className="w-6 h-6 hover:scale-110" />
                     </div>
                     {isDeleteMode ? (
                         <div>

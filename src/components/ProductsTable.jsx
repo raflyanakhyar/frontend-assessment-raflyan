@@ -3,6 +3,7 @@ import ButtonAction from './ButtonAction'
 import Badge from './Badge'
 import Modal from './Modal'
 import { CATEGORIES, STATUSES } from '../utils/constant'
+import { LuSearch, LuPlus, LuTrash, LuPen, LuEye } from 'react-icons/lu'
 
 const formatPrice = (value) =>
     new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(value)
@@ -100,22 +101,30 @@ export default function ProductsTables({
 
     return (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="flex justify-start border-b border-slate-200 p-4">
+            <div className="flex border-b border-slate-200 p-3 sm:p-4">
                 <ButtonAction
                     label="Add Product"
+                    icon={<LuPlus aria-hidden="true" />}
                     onClick={() =>
                         openModal({ name: '', category: '', price: '', status: 'In Stock' }, 'add')
                     }
                 />
             </div>
-            <div className="grid gap-3 border-b border-slate-200 p-4 sm:grid-cols-3">
-                <input
-                    type="search"
-                    value={searchTerm}
-                    onChange={(event) => setSearchTerm(event.target.value)}
-                    placeholder="Search product..."
-                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                />
+            <div className="grid gap-3 border-b border-slate-200 p-3 sm:grid-cols-3 sm:p-4">
+                <div className="relative">
+                    <LuSearch
+                        aria-hidden="true"
+                        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2"
+                    />
+                    <input
+                        type="search"
+                        value={searchTerm}
+                        onChange={(event) => setSearchTerm(event.target.value)}
+                        placeholder="Search product..."
+                        aria-label="Search products"
+                        className="w-full rounded-lg border border-slate-300 py-2 pl-10 pr-3 text-sm"
+                    />
+                </div>
                 <select
                     value={categoryFilter}
                     onChange={(event) => setCategoryFilter(event.target.value)}
@@ -142,7 +151,7 @@ export default function ProductsTables({
                 </select>
             </div>
             <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full min-w-212.5">
                     <thead>
                         <tr className="bg-slate-50 text-left border-b border-slate-200 text-2xl">
                             <th className="px-6 py-4 text-xs">Name</th>
@@ -170,19 +179,24 @@ export default function ProductsTables({
                                     <td className="px-6 py-4">{formatPrice(product.price)}</td>
                                     <td className="px-6 py-4">{formatStatus(product.status)}</td>
                                     <td className="px-6 py-4">{formatDate(product.createdAt)}</td>
-                                    <td className="flex px-6 py-4 gap-2">
-                                        <ButtonAction
-                                            label="View"
-                                            onClick={() => openModal(product, 'view')}
-                                        />
-                                        <ButtonAction
-                                            label="Edit"
-                                            onClick={() => openModal(product, 'edit')}
-                                        />
-                                        <ButtonAction
-                                            label="Delete"
-                                            onClick={() => openModal(product, 'delete')}
-                                        />
+                                    <td className="px-4 py-4 sm:px-6">
+                                        <div className="flex min-w-max gap-2">
+                                            <ButtonAction
+                                                label="View"
+                                                icon={<LuEye aria-hidden="true" />}
+                                                onClick={() => openModal(product, 'view')}
+                                            />
+                                            <ButtonAction
+                                                label="Edit"
+                                                icon={<LuPen aria-hidden="true" />}
+                                                onClick={() => openModal(product, 'edit')}
+                                            />
+                                            <ButtonAction
+                                                label="Delete"
+                                                icon={<LuTrash aria-hidden="true" />}
+                                                onClick={() => openModal(product, 'delete')}
+                                            />
+                                        </div>
                                     </td>
                                 </tr>
                             ))

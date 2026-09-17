@@ -1,9 +1,10 @@
-export default function ButtonAction({ label, onClick }) {
+export default function ButtonAction({ label, onClick, icon }) {
     return (
         <button
-            className="bg-transparent py-2 px-4 border border-gray-500 hover:scale-105 rounded"
+            className="flex shrink-0 items-center gap-2 rounded border border-gray-500 bg-transparent px-3 py-2 text-sm hover:scale-105 sm:px-4"
             onClick={onClick}
         >
+            {icon}
             {label}
         </button>
     )

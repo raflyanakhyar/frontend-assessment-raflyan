@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { LuX } from 'react-icons/lu'
 
 export default function Toast({ toast, onClose }) {
     useEffect(() => {
@@ -15,15 +16,13 @@ export default function Toast({ toast, onClose }) {
     return (
         <div
             role="status"
-            className={`fixed right-4 top-4 z-50 rounded-lg px-4 py-3 text-sm font-semibold text-white shadow-lg ${
+            className={`fixed left-3 right-3 top-3 z-50 rounded-lg px-4 py-3 text-sm font-semibold text-white shadow-lg sm:left-auto sm:right-4 sm:top-4 ${
                 isSuccess ? 'bg-green-600' : 'bg-red-600'
             }`}
         >
             <div className="flex items-center gap-3">
-                <span>{toast.message}</span>
-                <button type="button" onClick={onClose} aria-label="Close notification">
-                    Close
-                </button>
+                <span className="min-w-0 flex-1 wrap-break-word">{toast.message}</span>
+                <LuX type="button" onClick={onClose} className="w-6 h-6" />
             </div>
         </div>
     )
