@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import ButtonAction from './ButtonAction'
 import Badge from './Badge'
-import Modal from './Modal'
+import Modal from './ProductModal'
 import { CATEGORIES, STATUSES } from '../utils/constant'
 import { LuSearch, LuPlus, LuTrash, LuPen, LuEye } from 'react-icons/lu'
 
