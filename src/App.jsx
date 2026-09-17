@@ -1,4 +1,4 @@
-import ProductsTables from './components/ProductsTable'
+import ProductsTable from './components/ProductsTable'
 import ProductLoader from './components/ProductLoader'
 import Toast from './components/Toast'
 import useProducts from './hooks/useProducts'
@@ -21,7 +21,7 @@ function App() {
                 {isLoading && <ProductLoader />}
                 {error && <p className="text-center text-red-600">{error}</p>}
                 {!isLoading && !error && (
-                    <ProductsTables
+                    <ProductsTable
                         products={products}
                         onCreateProduct={createProduct}
                         onUpdateProduct={updateProduct}
