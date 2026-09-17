@@ -17,17 +17,24 @@ function App() {
 
     return (
         <>
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-7 space-y-4">
+            <main className="mx-auto h-screen sm:px-6 lg:px-8 bg-gray-200">
+                <div className="flex justify-center items-center h-30">
+                    <h1 className="text-3xl font-bold text-gray-800">
+                        E-Commerce Product Dashboard
+                    </h1>
+                </div>
                 {isLoading && <ProductLoader />}
                 {error && <p className="text-center text-red-600">{error}</p>}
                 {!isLoading && !error && (
-                    <ProductsTable
-                        products={products}
-                        onCreateProduct={createProduct}
-                        onUpdateProduct={updateProduct}
-                        onDeleteProduct={deleteProduct}
-                        onNotify={showToast}
-                    />
+                    <div className="flex justify-center items-center">
+                        <ProductsTable
+                            products={products}
+                            onCreateProduct={createProduct}
+                            onUpdateProduct={updateProduct}
+                            onDeleteProduct={deleteProduct}
+                            onNotify={showToast}
+                        />
+                    </div>
                 )}
             </main>
             <Toast toast={toast} onClose={closeToast} />

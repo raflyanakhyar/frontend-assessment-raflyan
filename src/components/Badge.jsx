@@ -7,8 +7,6 @@ export default function Badge({ title, color }) {
         green: 'bg-green-200 text-green-600',
     }
     return (
-        <span className={`${colorVariant[color]} rounded-2xl py-0.5 px-2 text-center`}>
-            {title}
-        </span>
+        <div className={`${colorVariant[color]} rounded-2xl py-0.5 px-2 text-center`}>{title}</div>
     )
 }
