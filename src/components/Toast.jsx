@@ -22,7 +22,9 @@ export default function Toast({ toast, onClose }) {
         >
             <div className="flex items-center gap-3">
                 <span className="min-w-0 flex-1 wrap-break-word">{toast.message}</span>
-                <LuX type="button" onClick={onClose} className="w-6 h-6" />
+                <button type="button">
+                    <LuX onClick={onClose} className="w-6 h-6" />
+                </button>
             </div>
         </div>
     )
