@@ -1,10 +1,8 @@
+import { useState } from 'react'
 import ButtonAction from './ButtonAction'
 import Badge from './Badge'
 import Modal from './Modal'
-import { useState } from 'react'
-
-const CATEGORIES = ['Electronics', 'Home & Kitchen', 'Apparel']
-const STATUSES = ['In Stock', 'Out of Stock']
+import { CATEGORIES, STATUSES } from '../utils/constant'
 
 const formatPrice = (value) =>
     new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(value)

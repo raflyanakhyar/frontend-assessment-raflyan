@@ -1,7 +1,5 @@
 import { useState } from 'react'
-
-const CATEGORIES = ['Electronics', 'Home & Kitchen', 'Apparel']
-const STATUSES = ['In Stock', 'Out of Stock']
+import { CATEGORIES, STATUSES } from '../utils/constant'
 
 const validateProduct = (product) => {
     const errors = {}
