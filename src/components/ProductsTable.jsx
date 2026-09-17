@@ -17,22 +17,15 @@ const formatDate = (value) =>
 
 const EMPTY_PRODUCT = { name: '', category: '', price: '', status: 'In Stock' }
 
-const formatCategory = (category) => {
-    if (category === 'Electronics') {
-        return <Badge title={category} color="orange" />
-    } else if (category === 'Home & Kitchen') {
-        return <Badge title={category} color="blue" />
-    } else if (category === 'Apparel') {
-        return <Badge title={category} color="violet" />
-    }
+const CATEGORY_COLORS = {
+    Electronics: 'orange',
+    'Home & Kitchen': 'blue',
+    Apparel: 'violet',
 }
 
-const formatStatus = (status) => {
-    if (status === 'In Stock') {
-        return <Badge title={status} color="green" />
-    } else if (status === 'Out of Stock') {
-        return <Badge title={status} color="red" />
-    }
+const STATUS_COLORS = {
+    'In Stock': 'green',
+    'Out of Stock': 'red',
 }
 
 export default function ProductsTables({
@@ -42,54 +35,8 @@ export default function ProductsTables({
     onDeleteProduct,
     onNotify,
 }) {
-    const [isModalOpen, setIsModalOpen] = useState(false)
-    const [selectedProduct, setSelectedProduct] = useState(null)
-    const [modalMode, setModalMode] = useState('view')
-
-    const openModal = (product, mode) => {
-        setSelectedProduct(product)
-        setModalMode(mode)
-        setIsModalOpen(true)
-    }
-
-    const handleAdd = async (newProduct) => {
-        const createdProduct = onCreateProduct ? await onCreateProduct(newProduct) : newProduct
-
-        setProductList((currentProducts) => [...currentProducts, createdProduct])
-        handleCloseModal()
-        onNotify('success', 'Product added successfully.')
-    }
-
-    const handleSave = async (updatedProduct) => {
-        const savedProduct = onUpdateProduct
-            ? await onUpdateProduct(updatedProduct)
-            : updatedProduct
-
-        setProductList((currentProducts) =>
-            currentProducts.map((product) =>
-                product.id === savedProduct.id ? savedProduct : product,
-            ),
-        )
-        handleCloseModal()
-        onNotify('success', 'Product updated successfully.')
-    }
-
-    const handleDelete = async (product) => {
-        if (onDeleteProduct) await onDeleteProduct(product)
-
-        setProductList((currentProducts) =>
-            currentProducts.filter((currentProduct) => currentProduct.id !== product.id),
-        )
-        handleCloseModal()
-        onNotify('success', 'Product deleted successfully.')
-    }
-
-    const handleCloseModal = () => {
-        setIsModalOpen(false)
-        setSelectedProduct(null)
-    }
-
     const [filters, setFilters] = useState({ search: '', category: '', status: '' })
+    const [modal, setModal] = useState(null)
 
     const filteredProducts = useMemo(() => {
         const search = filters.search.trim().toLowerCase()
@@ -103,8 +50,30 @@ export default function ProductsTables({
         })
     }, [products, filters])
 
+    console.log(products)
+
     const updateFilter = (field, value) => {
         setFilters((current) => ({ ...current, [field]: value }))
+    }
+
+    const openModal = (product, mode) => setModal({ product, mode })
+    const closeModal = () => setModal(null)
+
+    const handleSave = async (product) => {
+        if (modal.mode === 'add') {
+            await onCreateProduct(product)
+            onNotify('success', 'Product added successfully.')
+        } else {
+            await onUpdateProduct(product)
+            onNotify('success', 'Product updated successfully.')
+        }
+        closeModal()
+    }
+
+    const handleDelete = async (product) => {
+        if (onDeleteProduct) await onDeleteProduct(product)
+        onNotify('success', 'Product deleted successfully.')
+        closeModal()
     }
 
     return (
@@ -119,13 +88,14 @@ export default function ProductsTables({
             <ProductFilters filters={filters} onChange={updateFilter} />
             <div className="overflow-x-auto">
                 <table className="w-full min-w-212.5">
+                    <caption className="sr-only">Products</caption>
                     <thead>
-                        <tr className="bg-slate-50 text-left border-b border-slate-200 text-2xl">
-                            <th className="px-6 py-4 text-xs">Name</th>
-                            <th className="px-6 py-4 text-xs">Category</th>
-                            <th className="px-6 py-4 text-xs">Price</th>
-                            <th className="px-6 py-4 text-xs">Status</th>
-                            <th className="px-6 py-4 text-xs">Created</th>
+                        <tr className="border-b border-slate-200 bg-slate-50 text-left">
+                            {['Name', 'Category', 'Price', 'Status', 'Created'].map((heading) => (
+                                <th key={heading} className="px-6 py-4 text-xs">
+                                    {heading}
+                                </th>
+                            ))}
                             <th className="px-6 py-4 text-xs text-center">Action</th>
                         </tr>
                     </thead>
@@ -138,51 +108,62 @@ export default function ProductsTables({
                             </tr>
                         ) : (
                             filteredProducts.map((product) => (
-                                <tr key={product.id} className="border-b border-slate-100">
-                                    <td className="px-6 py-4">{product.name}</td>
-                                    <td className="px-6 py-4">
-                                        {formatCategory(product.category)}
-                                    </td>
-                                    <td className="px-6 py-4">{formatPrice(product.price)}</td>
-                                    <td className="px-6 py-4">{formatStatus(product.status)}</td>
-                                    <td className="px-6 py-4">{formatDate(product.createdAt)}</td>
-                                    <td className="px-4 py-4 sm:px-6">
-                                        <div className="flex min-w-max gap-2">
-                                            <ButtonAction
-                                                label="View"
-                                                icon={<LuEye aria-hidden="true" />}
-                                                onClick={() => openModal(product, 'view')}
-                                            />
-                                            <ButtonAction
-                                                label="Edit"
-                                                icon={<LuPen aria-hidden="true" />}
-                                                onClick={() => openModal(product, 'edit')}
-                                            />
-                                            <ButtonAction
-                                                label="Delete"
-                                                icon={<LuTrash aria-hidden="true" />}
-                                                onClick={() => openModal(product, 'delete')}
-                                            />
-                                        </div>
-                                    </td>
-                                </tr>
+                                <ProductRow
+                                    key={product.id}
+                                    product={product}
+                                    onAction={openModal}
+                                />
                             ))
                         )}
                     </tbody>
                 </table>
             </div>
-            {isModalOpen && selectedProduct && (
+            {modal && (
                 <Modal
-                    product={selectedProduct}
-                    mode={modalMode}
-                    onClose={handleCloseModal}
+                    product={modal.product}
+                    mode={modal.mode}
+                    onClose={closeModal}
                     onSave={handleSave}
                     onDelete={handleDelete}
-                    onAdd={handleAdd}
                     onError={(message) => onNotify('error', message)}
                 />
             )}
         </div>
+    )
+}
+
+function ProductRow({ product, onAction }) {
+    return (
+        <tr className="border-b border-slate-100">
+            <td className="px-6 py-4">{product.name}</td>
+            <td className="px-6 py-4">
+                <Badge title={product.category} color={CATEGORY_COLORS[product.category]} />
+            </td>
+            <td className="px-6 py-4">{formatPrice(product.price)}</td>
+            <td className="px-6 py-4">
+                <Badge title={product.status} color={STATUS_COLORS[product.status]} />
+            </td>
+            <td className="px-6 py-4">{product.createdAt ? formatDate(product.createdAt) : '-'}</td>
+            <td className="px-4 py-4 sm:px-6">
+                <div className="flex min-w-max gap-2">
+                    <ButtonAction
+                        label="View"
+                        icon={<LuEye aria-hidden="true" />}
+                        onClick={() => onAction(product, 'view')}
+                    />
+                    <ButtonAction
+                        label="Edit"
+                        icon={<LuPen aria-hidden="true" />}
+                        onClick={() => onAction(product, 'edit')}
+                    />
+                    <ButtonAction
+                        label="Delete"
+                        icon={<LuTrash aria-hidden="true" />}
+                        onClick={() => onAction(product, 'delete')}
+                    />
+                </div>
+            </td>
+        </tr>
     )
 }
 
