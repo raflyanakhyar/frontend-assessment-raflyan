@@ -1,95 +1,107 @@
-# Product Management Dashboard
+# Junior Frontend Developer Technical Assessment
 
-Product management dashboard built with React, Vite, Tailwind CSS, and `react-icons`.
-It supports viewing, adding, editing, deleting, searching, and filtering products.
+This application built for the Junior Frontend Developer Technical Assessment BIAENERGI
+
+This application helps users manage a product list in one dashboard. Users can search and filter products, view product details, add new products, edit existing products, and delete products with confirmation.
 
 ## Setup
 
-Requirements:
+### Requirements
 
-- Node.js 18 or newer
-- npm
+- Bun 1.1 or newer
 
 Install dependencies:
 
 ```bash
-npm install
+bun install
 ```
 
 Start the development server:
 
 ```bash
-npm run dev
+bun run dev
 ```
 
-Open the local URL printed by Vite, usually `http://localhost:5173`.
+Open the URL printed by Vite, usually `http://localhost:5173`.
 
 Other commands:
 
 ```bash
-npm run build    # Create a production build
-npm run preview  # Preview the production build locally
-npm run lint     # Run ESLint
+bun run build    # Create a production build
+bun run preview  # Preview the production build
+bun run lint     # Run ESLint
 ```
 
-### Environment Variables
+## API Endpoint
 
-No environment variables are required. The API URL is currently defined in
-`src/hooks/useProducts.js`.
+### Base Endpoint
 
-## Live API
+```text
+https://my-json-server.typicode.com/raflyanakhyar/frontend-assessment-raflyan/products
+```
 
-The application reads and writes products through this my-json-server endpoint:
+### API Routes
 
-`https://my-json-server.typicode.com/raflyanakhyar/frontend-assessment-raflyan/products`
+| Method   | Route           | Purpose            |
+| -------- | --------------- | ------------------ |
+| `GET`    | `/products`     | Fetch all products |
+| `POST`   | `/products`     | Add a new product  |
+| `PUT`    | `/products/:id` | Update a product   |
+| `DELETE` | `/products/:id` | Delete a product   |
 
-The endpoint is a mock API. `POST`, `PUT`, and `DELETE` responses may not be
-persisted by the server, and update/delete requests can return `404`. The app
-handles those update/delete `404` responses by applying the change to local
-React state for the current session.
+The full item URL follows this format:
 
-## Architecture
+```text
+https://my-json-server.typicode.com/raflyanakhyar/frontend-assessment-raflyan/products/:id
+```
+
+The application uses the collection endpoint to fetch initial data and create products, and the item endpoint for update and delete requests.
+
+Because this is a mock API, changes made through `POST`, `PUT`, and `DELETE` are not guaranteed to persist. The endpoint may also return `404` for update/delete requests. The application handles those `404` responses by updating local React state so the demo remains usable during the current session.
+
+## Architecture Overview
 
 ```text
 src/
-├── App.jsx                         Application shell and toast state
-├── main.jsx                        React entry point
-├── index.css                       Tailwind import
+├── App.jsx                         Application shell and global toast state
+├── main.jsx                        Entry point React
+├── index.css                       Tailwind CSS import
 ├── components/
 │   ├── ProductsTable.jsx            Table, filters, and product actions
-│   ├── ProductModal.jsx             Shared view/add/edit/delete modal
-│   ├── ProductForm.jsx              Reusable validated product form
-│   ├── ModalDeleteConfirmation.jsx  Delete confirmation content
+│   ├── ProductModal.jsx             View, add, edit, and delete modal
+│   ├── ProductForm.jsx              Reusable product form with validation
+│   ├── ModalDeleteConfirmation.jsx  Delete confirmation
 │   ├── ButtonAction.jsx             Reusable action button
 │   ├── Badge.jsx                    Category and status badges
-│   ├── ProductLoader.jsx            Loading skeleton and spinner
+│   ├── ProductLoader.jsx             Loading spinner and skeleton
 │   └── Toast.jsx                    Success and error notifications
 ├── hooks/
-│   └── useProducts.js               Fetch, create, update, and delete API logic
+│   └── useProducts.js               Fetch and CRUD API operations
 └── utils/
-    └── constant.js                  Seeded categories and allowed statuses
+	└── constant.js                  Valid categories and statuses
 ```
 
-### Data Flow
+### Key Components and Data Flow
 
-1. `useProducts` fetches the initial product list and exposes CRUD functions.
-2. `App` owns the API loading/error state and global toast state.
-3. `ProductsTable` owns table filters and opens the shared product modal.
-4. `ProductModal` handles view, add, edit, and delete modes.
-5. `ProductForm` validates fields inline on change and blur.
-6. Successful actions update the table and display a toast notification.
+1. `useProducts` fetches the product list and provides create, update, and delete functions.
+2. `App` manages loading state, error state, and global toast state.
+3. `ProductsTable` renders the data, search, category/status filters, and action buttons.
+4. `ProductModal` selects the view, add, edit, or delete mode.
+5. `ProductForm` handles reusable inputs and field-level validation on change/blur.
+6. `ProductLoader` is shown during the initial fetch, while `Toast` displays operation results.
 
 ## Decisions and Trade-offs
 
-- **React state instead of a state library:** The feature scope is small, so
-  `useState` and the `useProducts` hook keep state management simple and local.
-- **Shared modal:** View, add, and edit reuse the same modal surface, while
-  delete uses the modal's confirmation mode.
-- **Field-level validation:** Validation is centralized in the product modal and
-  errors are shown only after a field is touched or the form is submitted.
-- **Response-first updates:** The table updates after a successful API response
-  rather than assuming the request will succeed. This avoids showing a false
-  success state, at the cost of a slightly slower visual update.
-- **Mock API fallback:** Since the mock API can return `404` for update/delete,
-  those operations fall back to the current React state. This keeps the demo
-  usable but does not provide persistence across a full page refresh.
+- **Local React state:** `useState` and a custom hook were chosen because the application is small and does not need a state management library such as Redux or Zustand.
+- **Shared modal and form:** View, add, and edit reuse the same modal. The form is extracted into `ProductForm` to avoid duplicating inputs and validation.
+- **Response-first update:** The table updates after a successful API response, avoiding a false success state when a request fails.
+- **404 fallback:** The mock API may return `404` for update/delete requests. Those operations fall back to React state, with the trade-off that changes are not persisted after a full page refresh.
+- **Inline validation:** Errors are shown per field after the field is touched or the form is submitted. The submit button is disabled while a request is in progress.
+
+## Improvements With More Time
+
+- Replace the mock API with a real backend and database for persistent CRUD operations.
+- Add automated tests for validation, filtering, CRUD, loading, and error states.
+- Add pagination or server-side filtering for larger product collections.
+- Add a retry action when a request fails.
+- Improve focus management and keyboard navigation in the modal.
