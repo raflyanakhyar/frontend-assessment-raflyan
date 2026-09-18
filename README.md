@@ -105,3 +105,12 @@ src/
 - Add pagination or server-side filtering for larger product collections.
 - Add a retry action when a request fails.
 - Improve focus management and keyboard navigation in the modal.
+
+## Preview
+
+https://github.com/user-attachments/assets/7c653027-757a-45c4-9bb0-7701faf0a4df
+
+
+
+
+  
